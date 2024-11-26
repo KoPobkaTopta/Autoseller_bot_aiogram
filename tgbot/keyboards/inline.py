@@ -75,6 +75,7 @@ choose_payment = InlineKeyboardMarkup(
     inline_keyboard=[
         [
             InlineKeyboardButton(text="Банковская карта 💳", callback_data="u_money"),
+            InlineKeyboardButton(text="BITCOIN 💸", callback_data="cryptopay"),
         ]
     ]
 )
