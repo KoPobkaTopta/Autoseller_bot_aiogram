@@ -14,7 +14,7 @@ LEXICON_RU = {
     f"🤖 <a href='https://github.com/hiddify/hiddify-next/releases/tag/v2.0.5'>Android</a>\n"
     f"----------------------\n"
     f"🍏 <a href='https://github.com/hiddify/hiddify-next/releases/tag/v2.0.5'>MacOS</a>\n"
-    f"----------------------\n\n"
+    f"----------------------\n"
     f"🏠 <a href='https://github.com/hiddify/hiddify-next/releases/tag/v2.0.5'>Windows</a> \n"
     f"Выберите свою платформу для получения инструкции ⤵️",
     "iphone_support": f"📱 Подключение iPhone:\n\n"
