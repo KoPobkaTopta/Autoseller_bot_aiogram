@@ -67,7 +67,7 @@ settings_keyboard = InlineKeyboardMarkup(
 
 show_qr_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text="Показать Ваш QR-код", callback_data="show_qr")]
+        [InlineKeyboardButton(text="Показать Вашу ссылку", callback_data="show_qr")]
     ]
 )
 
