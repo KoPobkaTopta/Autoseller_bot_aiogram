@@ -81,7 +81,7 @@ async def process_os_selection_settings(call: CallbackQuery):
                     )
                 else:
                     await call.message.answer(
-                        text="Файл не найден, обратитесь к администратору",
+                        text="Ссылка не найдена, обратитесь к администратору",
                         reply_markup=support_keyboard,
                     )
                     return
