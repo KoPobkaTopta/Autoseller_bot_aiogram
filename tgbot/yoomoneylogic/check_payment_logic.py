@@ -11,7 +11,7 @@ from tgbot.yoomoneylogic.successful_re_subscription_payment import (
 )
 
 # Dictionary mapping subscription amounts to subscription durations in days
-SUBSCRIBE_TIMELINE: dict[float, int] = {582.0: 90, 873.0: 180, 1309.5: 365}
+SUBSCRIBE_TIMELINE: dict[float, int] = {150.0: 30, 450.0: 90, 900.0: 180}
 
 
 async def process_check_payment_and_subscription(
