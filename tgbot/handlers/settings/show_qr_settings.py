@@ -32,7 +32,7 @@ async def show_qr(call: CallbackQuery):
             photo_id: str = user_data.get("photo_id")
 
             await call.message.answer_photo(
-                photo=photo_id, caption=f"Ваш QR-код для подключения ⤴️"
+                photo=photo_id, caption=f"Ваша ссылка для подключения ⤴️"
             )
         else:
             await call.message.answer(
