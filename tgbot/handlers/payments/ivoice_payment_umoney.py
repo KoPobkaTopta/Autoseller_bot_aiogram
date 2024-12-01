@@ -63,3 +63,4 @@ async def invoicing_for_payment_u_money(call: CallbackQuery, state: FSMContext):
 
     await state.set_state("check_payment")
     await state.update_data(payment_id=payment.id, amount=payment.amount)
+
