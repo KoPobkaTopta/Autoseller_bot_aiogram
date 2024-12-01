@@ -1,12 +1,7 @@
 from datetime import datetime
-import os
-
-from aiogram.types import FSInputFile, InlineKeyboardMarkup, CallbackQuery
-
-from tgbot.mongo_db.db_api import files, subs
-from tgbot.utils.get_image import get_image_filename
+from aiogram.types import InlineKeyboardMarkup, CallbackQuery
+from tgbot.mongo_db.db_api import subs
 from tgbot.phrasebook.lexicon_ru import LEXICON_RU
-from tgbot.config import config
 
 async def process_successful_first_subscription_payment(
     call: CallbackQuery,
@@ -15,54 +10,25 @@ async def process_successful_first_subscription_payment(
     settings_keyboard: InlineKeyboardMarkup,
 ) -> None:
     """
-    Processes a successful first subscription payment.
-
-    Args:
-        call (CallbackQuery): The incoming callback query..
-        end_date_str (str): The end date of the subscription.
-        support_keyboard (InlineKeyboardMarkup): The support keyboard.
-        settings_keyboard (InlineKeyboardMarkup): The settings keyboard.
-
-    Returns:
-        None
+    Обрабатывает успешную первичную подписку и отправляет текст.
     """
     user_id = call.from_user.id
     date: datetime = datetime.now()
 
-    image_filename = ""
-    client_id = ""
-    pk = ""
+    # Получаем текст из лексикона для отправки
+    text_content = LEXICON_RU["first_subscription_success"]  # Пример текста
 
-    async for image in get_image_filename(config.tg_bot.sub_image_folder):
-        image_filename = image
-        break
-    try:
-        pk = image_filename.split("/")[3].split(".")[0]
-        client_id = "Client_№" + pk
-    except Exception as e:
-        print(e)
-    if not os.path.exists(image_filename):
-        await call.message.answer(
-            text=LEXICON_RU["empty_qr"],
-            reply_markup=support_keyboard,
-        )
-
-    image_from_pc = FSInputFile(image_filename)
-
-    result = await call.message.answer_photo(
-        photo=image_from_pc,
-        caption=f"✅  Оплата прошла успешно!!! \n\n\n"
-        f"Ваш QR - код для подключения ⤴️ \n\n"
-        f"<b>Срок действия:</b> до {end_date_str}\n\n"
-        f"Перейдите в меню настроек для подключения",
+    # Отправляем сообщение с текстом
+    await call.message.answer(
+        text=f"✅  Оплата прошла успешно!!! \n\n\n"
+             f"{text_content} \n\n"
+             f"<b>Срок действия:</b> до {end_date_str}\n\n"
+             f"Перейдите в меню настроек для подключения",
         reply_markup=settings_keyboard,
     )
 
-    await files.insert_one(
-        {"user_id": user_id, "photo_id": result.photo[-1].file_id, "pk": pk}
-    )
+    # Обновляем данные о подписке в базе данных
     await subs.update_one(
         filter={"user_id": user_id, "end_date": {"$gt": date}},
-        update={"$set": {"client_id": client_id}},
+        update={"$set": {"client_id": f"Client_№{user_id}"}}  # Можешь использовать id пользователя или свой client_id
     )
-    os.remove(image_filename)
