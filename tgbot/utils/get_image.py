@@ -1,18 +1,16 @@
-import os
-from typing import Generator
-
-
-async def get_image_filename(image_folder: str) -> Generator[str, None, None]:
+async def get_file_content(file_path: str) -> str:
     """
-    Asynchronously generates the next image filename from the specified image_folder directory.
+    Асинхронно читает содержимое текстового файла.
 
     Args:
-        image_folder (str): Path to the folder with the images.
+        file_path (str): Путь к текстовому файлу.
 
-    Yields:
-        str: The next image filename.
+    Returns:
+        str: Содержимое файла или пустая строка, если файл не удалось прочитать.
     """
-    for root, _, files in os.walk(image_folder):
-        for filename in sorted(files):
-            image_filename = os.path.join(root, filename)
-            yield image_filename
+    try:
+        async with aiofiles.open(file_path, mode='r', encoding='utf-8') as file:
+            return await file.read()
+    except Exception as e:
+        logging.error(f"Ошибка чтения файла {file_path}: {e}")
+        return ""
