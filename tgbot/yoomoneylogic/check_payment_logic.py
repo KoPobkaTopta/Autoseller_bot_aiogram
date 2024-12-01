@@ -11,8 +11,7 @@ from tgbot.yoomoneylogic.successful_re_subscription_payment import (
 )
 
 # Dictionary mapping subscription amounts to subscription durations in days
-SUBSCRIBE_TIMELINE: dict[float, int] = {150.0: 30, 450.0: 90, 900.0: 180}
-
+SUBSCRIBE_TIMELINE: dict[float, int] = {14.55: 30, 450.0: 90, 900.0: 180}
 
 async def process_check_payment_and_subscription(
     call: CallbackQuery, user_id: int, amount: float
@@ -28,21 +27,21 @@ async def process_check_payment_and_subscription(
     Returns:
         None
     """
-    trials: dict = trial.find_one(filter={"user_id": user_id})
-
     try:
-        trial_flag = trials.get("trial_flag")
+        trials = await trial.find_one(filter={"user_id": user_id})
+
+        trial_flag = trials.get("trial_flag") if trials else None
         if trial_flag == "on":
-            trial.update_one(
+            await trial.update_one(
                 filter={"user_id": user_id},
                 update={"$set": {"trial_flag": "Utilized"}},
             )
     except Exception as e:
-        print(e)
+        print(f"Error updating trial flag: {e}")
 
     now: datetime = datetime.now()
 
-    payments.insert_one(
+    await payments.insert_one(
         {
             "user_id": user_id,
             "amount": amount,
@@ -51,12 +50,12 @@ async def process_check_payment_and_subscription(
         }
     )
 
-    sub: dict = subs.find_one(filter={"user_id": user_id, "end_date": {"$gt": now}})
+    sub = await subs.find_one(filter={"user_id": user_id, "end_date": {"$gt": now}})
     if sub:
         end_date: datetime = sub["end_date"]
         end_date += timedelta(days=SUBSCRIBE_TIMELINE[amount])
 
-        sub = subs.find_one_and_update(
+        sub = await subs.find_one_and_update(
             filter={"user_id": user_id, "end_date": {"$gt": now}},
             update={"$set": {"end_date": end_date}},
             return_document=ReturnDocument.AFTER,
@@ -68,11 +67,11 @@ async def process_check_payment_and_subscription(
             call, end_date_str, support_keyboard, settings_keyboard
         )
     else:
-        subs.delete_many(filter={"user_id": user_id})
+        await subs.delete_many(filter={"user_id": user_id})
         start_date: datetime = now
         end_date = start_date + timedelta(days=SUBSCRIBE_TIMELINE[amount])
 
-        subs.insert_one(
+        await subs.insert_one(
             document={
                 "user_id": user_id,
                 "start_date": start_date,
