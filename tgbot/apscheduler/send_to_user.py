@@ -24,7 +24,7 @@ async def notification_to_user(bot: Bot) -> None:
     """
     today: datetime = datetime.now()
     reminder_days: int = (
-        2  # How many days before subscription expiry to send a reminder
+        32  # How many days before subscription expiry to send a reminder
     )
 
     users: Any = await get_data_in_subs({"end_date": {"$exists": True}})
