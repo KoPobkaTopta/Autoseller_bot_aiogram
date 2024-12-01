@@ -1,28 +1,24 @@
 from datetime import datetime, timedelta
-import os
 from typing import Union
-
-from aiogram.types import FSInputFile, InlineKeyboardMarkup, CallbackQuery, Message
-
+from aiogram.types import InlineKeyboardMarkup, CallbackQuery, Message
 from tgbot.mongo_db.db_api import files, subs, trial
-
 
 async def process_trial_subscription(
     query: Union[Message, CallbackQuery],
     settings_keyboard: InlineKeyboardMarkup,
     client_id: str,
-    image_filename: str,
+    text_content: str,  # Это будет передаваемый текст
     pk: str,
 ) -> None:
     """
-    Processes a trial subscription.
+    Обрабатывает пробный период с отправкой текста из файла.
 
     Args:
-        query (Union[Message, CallbackQuery]): The query object representing the message.
-        settings_keyboard (InlineKeyboardMarkup): The settings keyboard.
-        client_id (str): The client ID.
-        image_filename (str): The image filename.
-        pk (str): The package ID.
+        query (Union[Message, CallbackQuery]): Объект сообщения.
+        settings_keyboard (InlineKeyboardMarkup): Клавиатура.
+        client_id (str): ID клиента.
+        text_content (str): Содержимое текста.
+        pk (str): ID пакета.
 
     Returns:
         None
@@ -30,10 +26,12 @@ async def process_trial_subscription(
     user_id: int = query.from_user.id
     date: datetime = datetime.now()
 
+    # Удаляем старые подписки
     await subs.delete_many(filter={"user_id": user_id})
 
     end_date = date + timedelta(days=3)
 
+    # Добавляем информацию о пробном периоде в базу
     await trial.insert_one(
         {
             "user_id": user_id,
@@ -52,21 +50,25 @@ async def process_trial_subscription(
         }
     )
 
-    image_from_pc = FSInputFile(image_filename)
-
     end_date_str: str = end_date.strftime("%d.%m.%Y")
 
-    result = await query.answer_photo(
-        photo=image_from_pc,
-        caption=f"✅  Подписка успешно оформлена!!! \n\n\n"
-        f"Ваш QR - код для подключения ⤴️ \n\n"
-        f"<b>Срок действия пробного периода:</b> до {end_date_str}\n\n"
-        f"Перейдите в меню настроек для подключения",
+    # Добавляем или обновляем текст в базе данных
+    await files.update_one(
+        {"user_id": user_id},  # Фильтр по user_id
+        {"$set": {"text_data": text_content}},  # Добавляем или обновляем поле text_data
+        upsert=True  # Если пользователя нет, будет создан новый документ
+    )
+
+    # Отправляем текст из файла
+    await query.answer(
+        text=f"✅  Подписка успешно оформлена!!! \n\n\n"
+             f"{text_content}\n\n"
+             f"<b>Срок действия пробного периода:</b> до {end_date_str}\n\n"
+             f"Перейдите в меню настроек для подключения",
         reply_markup=settings_keyboard,
     )
 
+    # Логируем отправку
     await files.insert_one(
-        {"user_id": user_id, "photo_id": result.photo[-1].file_id, "pk": pk}
+        {"user_id": user_id, "content": text_content, "pk": pk}
     )
-
-    os.remove(image_filename)
