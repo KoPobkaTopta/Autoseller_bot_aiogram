@@ -2,17 +2,20 @@ import os
 from typing import Generator
 
 
-async def get_image_filename(image_folder: str) -> Generator[str, None, None]:
+async def get_text_from_file(folder: str) -> Generator[str, None, None]:
     """
-    Asynchronously generates the next image filename from the specified image_folder directory.
+    Асинхронно считывает текст из файлов .txt в указанной папке.
 
     Args:
-        image_folder (str): Path to the folder with the images.
+        folder (str): Путь к папке с файлами.
 
     Yields:
-        str: The next image filename.
+        str: Текст из файла.
     """
-    for root, _, files in os.walk(image_folder):
+    for root, _, files in os.walk(folder):
         for filename in sorted(files):
-            image_filename = os.path.join(root, filename)
-            yield image_filename
+            if filename.endswith('.txt'):
+                file_path = os.path.join(root, filename)
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    yield file.read()
+
